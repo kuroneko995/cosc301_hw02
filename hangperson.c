@@ -77,6 +77,54 @@ char get_length (const char *word) { // return length of the char array
     return count;
 }
 
+bool in_str(char a, char *str) {
+    bool found = false;
+    char temp = 'a';
+    while (temp != '\0') {
+        temp = *str;
+        if (temp == a) {
+            return true; 
+        } else {
+            str += sizeof(char);
+        }
+    }
+    return false;
+}
+
+/*
+ * Append a char to a string. May crash stuff
+ */
+void append(char a, char *str) {
+    char temp = *str;
+    while (temp != '\0') {
+        str += sizeof(char);
+        temp = *str;
+    }
+    *str = a;
+    str += sizeof(char);
+    *str = '\0';
+}
+
+
+/*
+ * Update current string based on correct guess
+ */
+void update_curr(char a, char *secretWord, char *currWord) {
+    char temp = 'a';
+    temp = *secretWord;
+    while (temp != '\0') {
+        temp = *secretWord;
+        if (temp == a) {
+            *currWord = a;
+        } 
+        secretWord += sizeof(char);
+        currWord += sizeof(char);
+        
+
+    }    
+
+}
+
 
 /*
  * Print prompt
@@ -90,6 +138,15 @@ void print_prompt(char guessedChar[]) {
     }
     printf("What is your guest? ");
 }
+
+
+/*
+ * Print a propmt when user enter bogus guess
+ */
+void print_tryagain() {
+    printf("Please enter a single alphabetical character.\n");
+}
+ 
 
 /*
  * Check if word is guessed. Return true if no '_' symbol remains
@@ -119,12 +176,11 @@ bool one_game(const char *word) {
     bool game_over = false;
     char input[32];
 
+
     // Create a string containing the secret word
     char secretWord[wordLength+1];
-    for (char i = 0; i < wordLength; i++) {
-        secretWord[i] = *(word + i * sizeof(char));
-    }
-    secretWord[wordLength] = '\0';
+    strcpy(&secretWord, word);
+    printf("The secret word is: %s\n",secretWord);
     printf("Length of word is: %d\n", wordLength);
 
     // Create a string representing the guessing state
@@ -139,9 +195,54 @@ bool one_game(const char *word) {
     guessedChar[0] = '\0';
 
     while (!game_over) {
-        print_prompt(guessedChar);
-        fgets(input, 32, stdin);
-                
+        bool good_input = false;
+        print_gallows(num_missed);
+        printf("%s\n", currWord);
+        char guess = 'a';
+        while (!good_input) { // Loop until a single alphabet char is typed in
+            print_prompt(guessedChar);
+            fgets(input, 32, stdin);
+            if (feof(stdin)) {
+                clearerr(stdin);
+                print_tryagain();
+                continue;
+            } else if (input[0] == '\0' || input[1] != '\n') {
+                print_tryagain();
+                continue;
+            } else if (!isalpha(input[0])) {
+                print_tryagain();
+                continue;
+            } else {
+                guess = toupper(input[0]);
+                if (in_str(guess, &guessedChar)) {
+                    printf("You already guessed %c\n", guess);
+                    continue;
+                }
+                good_input = true;
+            }  
+        } 
+
+       
+        append(guess, &guessedChar);
+        if (in_str(guess, &secretWord)) {
+            printf("Good guess.\n");
+            update_curr(guess, &secretWord, &currWord);
+            if (is_guessed(&currWord)){
+                game_over = true;
+                break;
+            }
+        } else {
+            printf("Bad guess.\n");
+            num_missed += 1;
+            if (num_missed >= 7) {
+                game_over = true;
+                print_gallows(num_missed);
+                break;                        
+            }
+        }
+        
+        printf("Missed: %d\n",num_missed);              
+        good_input = true; 
 
 
     }
