@@ -174,7 +174,7 @@ bool one_game(const char *word) {
     char wordLength = get_length(word);
     char num_missed = 0;
     bool game_over = false;
-    char input[32];
+    char input[1024];
 
 
     // Create a string containing the secret word
@@ -201,7 +201,7 @@ bool one_game(const char *word) {
         char guess = 'a';
         while (!good_input) { // Loop until a single alphabet char is typed in
             print_prompt(guessedChar);
-            fgets(input, 32, stdin);
+            fgets(input, 1024, stdin);
             if (feof(stdin)) {
                 clearerr(stdin);
                 print_tryagain();
